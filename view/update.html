@@ -1,4 +1,5 @@
-<html lang="en"><head>
+<html lang="en">
+<head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
@@ -6,60 +7,260 @@
 	<title>녹음 파일 이름</title>
 	<link href="dist/css/bootstrap.css" rel="stylesheet">
 	<link href="dist/css/common.css" rel="stylesheet">
+	<link rel="stylesheet" href="dist/css/jquery.mobile.css" />
+	
+	<script src="http://code.jquery.com/jquery-1.8.2.min.js"></script>
 
+	<script src="http://code.jquery.com/mobile/1.2.0/jquery.mobile-1.2.0.min.js"></script>
+	<script type="text/javascript" src="https://cdn.rawgit.com/meetselva/attrchange/master/js/attrchange.js"></script>
+	<script type="text/javascript" src="https://momentjs.com/downloads/moment.js"></script>
 	<!-- Just for debugging purposes. Don't actually copy these 2 lines! -->
 	<!--[if lt IE 9]><script src="../../assets/js/ie8-responsive-file-warning.js"></script><![endif]-->
-	 
 	<!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
 	<!--[if lt IE 9]>
 		<script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
 		<script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
 		<![endif]-->
 	</head>
-
 	<body cz-shortcut-listen="true">
 		<div id="fb-root"></div>
-		<script>(function(d, s, id) {
-			var js, fjs = d.getElementsByTagName(s)[0];
-			if (d.getElementById(id)) return;
-			js = d.createElement(s); js.id = id;
-			js.src = "http://connect.facebook.net/ko_KR/sdk.js#xfbml=1&version=v2.8&appId=698037910356409";
-			fjs.parentNode.insertBefore(js, fjs);
-		}(document, 'script', 'facebook-jssdk'));</script>
-		
 		<div class="container">
-			<div class="record-title">
-				<h3 class="page-title">녹음파일 제목</h3>
-			</div>
-			<div class="music-player">
-				<audio class="audiocontroller" controls="">
-					<source src="horse.ogg" type="audio/ogg">
-						<source src="horse.mp3" type="audio/mpeg">
-							브라우저 미지원
-						</audio>
-					</div>
-					<div class="record-text edit_mode">
-						<textarea class="form-control" rows="3"></textarea>
-					</div>
-					<div class="bottom_actions">
-						<div class="button_lists">
-							<button class="btn btn-info update_details" type="submit">수정하기</button>
+			<div class="record-cover">
+				<div class="cover_image">
+				</div>
+				<div class="cover_image_inner">
+				</div>
+				<div class="musiccontroller">
+					<div class="music_con margin_1">
+						<div class="music_inner _stop">
 						</div>
 					</div>
+					<div class="music_con margin_2">
+						<div class="music_inner check_state _play"></div>
+					</div>
 				</div>
-			</body>
-			<script src="dist/js/jquery.min.js"></script>
-			<script>
-			$(".lgn_button").click(function() {
-				FB.login(function(response) {				
-					if (response.status == "connected") {
-						var userId = response.userID; 
-						var accessToken = response.accessToken;
+				<div class="musicseeker">
+					<div class="div">
+						<div class="currentslider"></div>
+						<input min="0" value="0" max="0" id="rangeslider_id" class="rangeslider" type="range" />
+						<p class="seeker_currenttime">0:00</p>
+						<p class="seeker_endtime">0:00</p>
+					</div>
+					<div class="audiocontroller">
+						<audio id="audio_resource_record">
+							
+						</audio>
+					</div>
+				</div>
+			</div>
+			<div class="record-info-wrapper">
+				<div class="record-info">
+					<h3 class="record-title">데이터 출력 중</h3>
+					<div class="record-info-divider"></div>
+					<div class="record-date"><p class="date">...</div>
+					</div>
+				</div>
+			
+				<div class="record-text">
+
+				</div>
+				<div class="bottom_actions">
+					<button class="update_button" type="submit">제출하기</button>
+				</div>
+			
+			
+			</div>
+		
+		</body>
+	
+		<script>
+
+		window.onload = function() {
+
+			function setContent(userParam) {
+				console.log(userParam)
+				var token = userParam.split("user_token=")[1];
+				var identifier = userParam.split("&user_token")[0].split("=")[1]
+			
+			
+				console.log(token, identifier);
+				if (token && identifier) {
+					$.ajax({
+						url: "http://192.168.43.180:8000/api/records/" + identifier,
+						type: "GET",
+						success: function(d) {
+							var datetime = d.datetime;
+							var duration = d.duration ;
+							var title = d.title;
+							var text_json = d.text_json;
+							var file_dest = d.file;
 						
-						location.href="update.html";
-						console.log(response);
+							$("h3.record-title").html(title);
+							$(".record-texts").remove();
+							$("#audio_resource_record").append('<source src="'+ file_dest+'" />')
+							$(".record-date p").html(datetime);
+						
+							for (log in text_json) {						
+								var text = text_json[log].text;
+								var time = text_json[log].time;
+								if (text) {
+									$(".record-text").append('<textarea data-time="' + time +'" class="form-control record-text-area content-idx-' + log+'">' + text + '</textarea>');
+								}
+							}
+
+						}
+					});
+				} else {
+					alert("권한이 없습니다.")
+				}
+			}
+		
+	
+	
+			console.log("document.onload loaded" );
+			setContent(window.location.search);
+
+
+			function fmtMSS(s){return(s-(s%=60))/60+(9<s?':':':0')+s}
+		
+		
+			$(function() {
+				var playmode = false;
+			
+				$(".update_button").unbind('click').click(function(event) {
+					event.stopPropagation();
+					var identifier = window.location.search.split("&user_token")[0].split("=")[1]
+					var token = window.location.search.split("user_token=")[1];
+					var textsArray = new Array(); // or the shortcut: = []
+				
+					$.each($(".record-text-area") , function (i,val) {
+						var text_content = $(val).val();
+						var time = $(val).data("time");
+						textsArray.push({"time": time,"text": text_content })
+					});
+					var json_data = {
+						id : identifier,
+						text : textsArray
 					}
-				}, {scope: 'public_profile,email'});
+					console.log(json_data);
+					$.ajax({
+						type : "PUT",
+						url: "http://192.168.43.180:8000/api/records/" + identifier,
+						dateType:"json", 
+						data: "text=" + JSON.stringify(textsArray),
+						beforeSend: function (xhr) {
+							xhr.setRequestHeader("Authorization", "JWT " + token);
+						},
+						headers: {
+							Accept: "application/json"
+						},
+						success : function(response) {
+							console.log(response);
+						}
+					});
+				
+				})
+				var MusicObject = document.getElementById("audio_resource_record");		
+				$("#rangeslider_id").attrchange({
+					trackValues:true,
+					callback : function(event) {
+
+						if (event.attributeName == "value") {
+							console.log("changed")
+							$(".rangeslider").slider("refresh");
+							var current = $("#rangeslider_id").attr("value");
+							var max = $("#rangeslider_id").attr("max");
+							var percentage = parseInt((current / max ) * 100);
+				
+							if (percentage > 89) {
+								$(".seeker_currenttime").hide();
+							} else {
+								$(".seeker_currenttime").show();
+							}
+				
+							$(".seeker_currenttime").html(fmtMSS(current));
+							$(".seeker_endtime").html(fmtMSS(max));
+						}
+					}
+				})
+	
+
+				$(".ui-slider").unbind('click').click(function(event) {
+					event.stopPropagation();
+					var current = $("#rangeslider_id").attr("value");
+					MusicObject.currentTime = current;
+					console.log("Click event")
+			
+				});
+
+				$(".ui-slider-input").change(function(event) {
+					event.stopPropagation();
+					var get_left = $("a.ui-btn-corner-all").css("left");
+					var set_left = parseInt(get_left) - 15;
+					var set_width = parseInt(get_left);
+					var changeValue = $(".rangeslider").attr("value");
+		
+					$(".seeker_currenttime").css("display", "inline-block");
+					$(".seeker_currenttime").css("left", set_left );
+					$(".currentslider").css("width", set_width);
+					console.log("Change - ui slider" , changeValue);
+		
+		
+					var current = $("#rangeslider_id").attr("value");
+					var max = $("#rangeslider_id").attr("max");
+		
+					$(".seeker_currenttime").html(fmtMSS(current));
+					$(".seeker_endtime").html(fmtMSS(max));
+		
+				});
+
+				$(".check_state").unbind('click').click(function(event) {
+					event.stopPropagation();
+					if ($(".check_state").hasClass("_play") == true) {
+						$(".check_state").removeClass("_play");
+						$(".check_state").addClass("_pause");
+						MusicObject.currentTime = $(".rangeslider").attr("value");
+						MusicObject.play();
+						console.log("stop")
+						playmode=  true
+					} else {
+						MusicObject.pause();
+						$(".check_state").removeClass("_pause");
+						$(".check_state").addClass("_play");
+						console.log("play");		
+						playmode = false;
+					}
+				});
+	
+
+	
+				$('#rangeslider_id').on('input propertychange paste', function(event) {
+					event.stopPropagation();
+					console.log("refresh");
+					$(".rangeslider").slider("refresh");
+
+				});
+	
+	
+				MusicObject.addEventListener('canplay', function(response) {
+					console.log("duration");
+					console.log(MusicObject.duration)
+					$(".rangeslider").attr("max", parseInt(MusicObject.duration));
+					$(".rangeslider").attr("value",parseInt(MusicObject.currentTime));  
+				});
+	
+				var timer = null, interval = 4000,value = 0;
+	
+				MusicObject.addEventListener('timeupdate', function(time) {
+					$(".rangeslider").attr("value",parseInt(MusicObject.currentTime));  
+				});
+	
+	
 			})
-			</script>
-			</html>
+   
+   
+		}
+
+		</script>
+
+		</html>
