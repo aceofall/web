@@ -94,11 +94,11 @@
 							var title = d.title;
 							var text_json = d.text_json;
 							var file_dest = d.file;
-						
 							$("h3.record-title").html(title);
 							$(".record-texts").remove();
 							$("#audio_resource_record").append('<source src="'+ file_dest+'" />')
 							$(".record-date p").html(datetime);
+							
 						
 							for (log in text_json) {						
 								var text = text_json[log].text;
@@ -155,7 +155,14 @@
 							Accept: "application/json"
 						},
 						success : function(response) {
-							console.log(response);
+							var response_id = response.id;
+							if (response_id ) {
+								alert("수정이 완료되었습니다.");
+								location.href="/?id=" + identifier;
+							} else {
+								alert("인터넷 연결을 확인해 주세요.");
+							}
+							
 						}
 					});
 				
