@@ -11,16 +11,14 @@
 	
 	<script src="http://code.jquery.com/jquery-1.8.2.min.js"></script>
 	<script src="http://code.jquery.com/mobile/1.2.0/jquery.mobile-1.2.0.min.js"></script>
-	<script type="text/javascript"
-	  src="https://cdn.rawgit.com/meetselva/attrchange/master/js/attrchange.js"></script>
-
+	<script type="text/javascript" src="https://cdn.rawgit.com/meetselva/attrchange/master/js/attrchange.js"></script>
 	<!-- Just for debugging purposes. Don't actually copy these 2 lines! -->
-	<!--[if lt IE 9]><script src="../../assets/js/ie8-responsive-file-warning.js"></script><![endif]-->
+		<!--[if lt IE 9]><script src="../../assets/js/ie8-responsive-file-warning.js"></script><![endif]-->
 	<!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
 	<!--[if lt IE 9]>
 		<script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
 		<script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
-		<![endif]-->
+	<![endif]-->
 	</head>
 	<body cz-shortcut-listen="true">
 		<div id="fb-root"></div>
@@ -48,8 +46,7 @@
 					</div>
 					<div class="audiocontroller">
 						<audio id="audio_resource_record">
-							<source src="https://archive.org/download/BethelLutheranChurch_1/BL20051129AncientWords.mp3" type="audio/mpeg" />
-							Your browser does not support HTML5 audio.
+							
 						</audio>
 					</div>
 				</div>
@@ -71,183 +68,205 @@
 				</div>
 			</div>
 		</div>
+		
 	</body>
+	
 	<script>
-	
-	setContent(window.location.search.split("?")[1]);
-	
-	function setContent(userParam) {
-		var keyname = userParam.split("=")[0];
-		var value = userParam.split("=")[1];
-		console.log(keyname, value);
-		if (keyname == "id" && value) {
-			$.ajax({
-				url: "http://192.168.43.180:8000/api/records/" + value,
-				type: "GET",
-				success: function(d) {
-					var datetime = d.datetime;
-					var duration = d.duration ;
-					var title = d.title;
-					var text_json = d.text_json;
-					
-					$(".record-date p").html(datetime);
-					$("h3.record-title").html(title);
-					$(".record-texts").remove();
-					
-					
-					for (log in text_json) {						
-						var text = text_json[log].text;
-						if (text) {
-							$(".record-text").append('<p class="record-texts">' + text +'</p>')
-						} else {
-							
-						}
-					}
 
+	window.onload = function() {
+
+		function setContent(userParam) {
+			var keyname = userParam.split("=")[0];
+			var value = userParam.split("=")[1];
+			console.log(keyname, value);
+			if (keyname == "id" && value) {
+				$.ajax({
+					url: "http://192.168.43.180:8000/api/records/" + value,
+					type: "GET",
+					success: function(d) {
+						var datetime = d.datetime;
+						var duration = d.duration ;
+						var title = d.title;
+						var text_json = d.text_json;
+						var file_dest = d.file;
+					
+				
+						$(".record-date p").html(datetime);
+						$("h3.record-title").html(title);
+						$(".record-texts").remove();
+						$("#audio_resource_record").append('<source src="'+ file_dest+'" />')
+					
+				
+						console.log("success -1")
+						for (log in text_json) {						
+							var text = text_json[log].text;
+							if (text) {
+								$(".record-text").append('<p class="record-texts">' + text +'</p>')
+							} else {
+						
+							}
+						}
+
+					}
+				});
+			} else {
+				history.go(-1);
+		
+			}
+	
+		}
+
+		var isloaded = false;
+	
+		window.document.onload = function(e){
+			event.stopPropagation();
+			if (isloaded) {
+				return;
+			}
+			console.log("document.onload loaded" );
+			setContent(window.location.search.split("?")[1]);
+		}
+
+		(function(d, s, id) {
+			var js, fjs = d.getElementsByTagName(s)[0];
+			if (d.getElementById(id)) return;
+			js = d.createElement(s); js.id = id;
+			js.src = "http://connect.facebook.net/ko_KR/sdk.js#xfbml=1&version=v2.8&appId=698037910356409";
+			fjs.parentNode.insertBefore(js, fjs);
+		}(document, 'script', 'facebook-jssdk'));
+
+
+		function fmtMSS(s){return(s-(s%=60))/60+(9<s?':':':0')+s}
+
+
+		$(function() {
+			var playmode = false;
+	
+			$(".lgn_button").unbind('click').click(function(event) {
+				event.stopPropagation();
+				FB.login(function(response) {				
+					if (response.status == "connected") {
+
+						var userid = response.authResponse.userID;
+						console.log(response)
+						$.ajax({
+							url: "http://192.168.43.180:8000/api/users",
+							type: "POST",
+
+							data: "username=" + userid,
+							success: function(d) {
+								location.href="update.html?user_token=" + d.token + "&id=" + d.id;
+								console.log(d) ;
+							}
+						});
+						console.log(response);
+				
+					}
+				}, {scope: 'public_profile,email'});
+
+			})
+			var MusicObject = document.getElementById("audio_resource_record");		
+			$("#rangeslider_id").attrchange({
+				trackValues:true,
+				callback : function(event) {
+
+					if (event.attributeName == "value") {
+						console.log("changed")
+						$(".rangeslider").slider("refresh");
+						var current = $("#rangeslider_id").attr("value");
+						var max = $("#rangeslider_id").attr("max");
+						var percentage = parseInt((current / max ) * 100);
+				
+						if (percentage > 89) {
+							$(".seeker_currenttime").hide();
+						} else {
+							$(".seeker_currenttime").show();
+						}
+				
+						$(".seeker_currenttime").html(fmtMSS(current));
+						$(".seeker_endtime").html(fmtMSS(max));
+				
+
+					}
+				}
+			})
+	
+
+			$(".ui-slider").unbind('click').click(function(event) {
+				event.stopPropagation();
+				var current = $("#rangeslider_id").attr("value");
+				MusicObject.currentTime = current;
+				console.log("Click event")
+			
+			});
+
+			$(".ui-slider-input").change(function(event) {
+				event.stopPropagation();
+				var get_left = $("a.ui-btn-corner-all").css("left");
+				var set_left = parseInt(get_left) - 15;
+				var set_width = parseInt(get_left);
+				var changeValue = $(".rangeslider").attr("value");
+		
+				$(".seeker_currenttime").css("display", "inline-block");
+				$(".seeker_currenttime").css("left", set_left );
+				$(".currentslider").css("width", set_width);
+				console.log("Change - ui slider" , changeValue);
+		
+		
+				var current = $("#rangeslider_id").attr("value");
+				var max = $("#rangeslider_id").attr("max");
+		
+				$(".seeker_currenttime").html(fmtMSS(current));
+				$(".seeker_endtime").html(fmtMSS(max));
+		
+			});
+
+			$(".check_state").unbind('click').click(function(event) {
+				event.stopPropagation();
+				if ($(".check_state").hasClass("_play") == true) {
+					$(".check_state").removeClass("_play");
+					$(".check_state").addClass("_pause");
+					MusicObject.currentTime = $(".rangeslider").attr("value");
+					MusicObject.play();
+					console.log("stop")
+					playmode=  true
+				} else {
+					MusicObject.pause();
+					$(".check_state").removeClass("_pause");
+					$(".check_state").addClass("_play");
+					console.log("play");		
+					playmode = false;
 				}
 			});
-		} else {
-			history.go(-1);
-			
-		}
-		
+	
+
+	
+			$('#rangeslider_id').on('input propertychange paste', function(event) {
+				event.stopPropagation();
+				console.log("refresh");
+				$(".rangeslider").slider("refresh");
+
+			});
+	
+	
+			MusicObject.addEventListener('canplay', function(response) {
+				console.log("duration");
+				console.log(MusicObject.duration)
+				$(".rangeslider").attr("max", parseInt(MusicObject.duration));
+				$(".rangeslider").attr("value",parseInt(MusicObject.currentTime));  
+			});
+	
+			var timer = null, interval = 4000,value = 0;
+	
+			MusicObject.addEventListener('timeupdate', function(time) {
+				$(".rangeslider").attr("value",parseInt(MusicObject.currentTime));  
+			});
+	
+	
+		})
+   
+   
 	}
-	
-	
-	(function(d, s, id) {
-		var js, fjs = d.getElementsByTagName(s)[0];
-		if (d.getElementById(id)) return;
-		js = d.createElement(s); js.id = id;
-		js.src = "http://connect.facebook.net/ko_KR/sdk.js#xfbml=1&version=v2.8&appId=698037910356409";
-		fjs.parentNode.insertBefore(js, fjs);
-	}(document, 'script', 'facebook-jssdk'));
 
-
-	function fmtMSS(s){return(s-(s%=60))/60+(9<s?':':':0')+s}
-	
-	
-	$(function() {
-		var playmode = false;
-		
-		
-		
-		$(".lgn_button").unbind('click').click(function() {
-			FB.login(function(response) {				
-				if (response.status == "connected") {
- 
-					var userid = response.authResponse.userID;
-					console.log(response)
-					$.ajax({
-						url: "http://192.168.43.180:8000/api/users",
-						type: "POST",
-
-						data: "username=" + userid,
-						success: function(d) {
-							location.href="update.html?user_token=" + d.token + "&id=" + d.id;
-							console.log(d) ;
-						}
-					});
-					console.log(response);
-					
-				}
-			}, {scope: 'public_profile,email'});
-
-		})
-		var MusicObject = document.getElementById("audio_resource_record");		
-		$("#rangeslider_id").attrchange({
-			trackValues:true,
-			callback : function(event) {
-				if (event.attributeName == "value") {
-					console.log("changed")
-					$(".rangeslider").slider("refresh");
-					var current = $("#rangeslider_id").attr("value");
-					var max = $("#rangeslider_id").attr("max");
-					var percentage = parseInt((current / max ) * 100);
-					
-					if (percentage > 89) {
-						$(".seeker_currenttime").hide();
-					} else {
-						$(".seeker_currenttime").show();
-					}
-					
-					$(".seeker_currenttime").html(fmtMSS(current));
-					$(".seeker_endtime").html(fmtMSS(max));
-					
-
-				}
-			}
-		})
-		
-
-		$(".ui-slider").unbind('click').click(function() {
-			var current = $("#rangeslider_id").attr("value");
-			MusicObject.currentTime = current;
-			console.log("Click event")
-				
-		});
-
-		$(".ui-slider-input").change(function() {
-			var get_left = $("a.ui-btn-corner-all").css("left");
-			var set_left = parseInt(get_left) - 15;
-			var set_width = parseInt(get_left);
-			var changeValue = $(".rangeslider").attr("value");
-			
-			$(".seeker_currenttime").css("display", "inline-block");
-			$(".seeker_currenttime").css("left", set_left );
-			$(".currentslider").css("width", set_width);
-			console.log("Change - ui slider" , changeValue);
-			
-			
-			var current = $("#rangeslider_id").attr("value");
-			var max = $("#rangeslider_id").attr("max");
-			
-			$(".seeker_currenttime").html(fmtMSS(current));
-			$(".seeker_endtime").html(fmtMSS(max));
-			
-		});
-	
-		$(".check_state").unbind('click').click(function() {
-			if ($(".check_state").hasClass("_play") == true) {
-				$(".check_state").removeClass("_play");
-				$(".check_state").addClass("_pause");
-				MusicObject.currentTime = $(".rangeslider").attr("value");
-				MusicObject.play();
-				console.log("stop")
-				playmode=  true
-			} else {
-				MusicObject.pause();
-				$(".check_state").removeClass("_pause");
-				$(".check_state").addClass("_play");
-				console.log("play");		
-				playmode = false;
-			}
-		});
-		
-
-		
-		jQuery('#rangeslider_id').on('input propertychange paste', function() {
-			console.log("refresh");
-			$(".rangeslider").slider("refresh");
-
-		});
-		
-		
-		MusicObject.addEventListener('canplay', function(response) {
-			console.log("duration");
-			console.log(MusicObject.duration)
-			$(".rangeslider").attr("max", parseInt(MusicObject.duration));
-			$(".rangeslider").attr("value",parseInt(MusicObject.currentTime));  
-		});
-		
-		var timer = null, interval = 4000,value = 0;
-		
-		MusicObject.addEventListener('timeupdate', function(time) {
-			$(".rangeslider").attr("value",parseInt(MusicObject.currentTime));  
-		});
-		
-		
-	})
-      
-      
 	</script>
 	</html>
