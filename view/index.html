@@ -25,7 +25,7 @@
 	<body cz-shortcut-listen="true">
 		<div id="fb-root"></div>
 		<div class="container">
-			<div class="record-title">
+			<div class="record-cover">
 				<div class="cover_image">
 				</div>
 				<div class="cover_image_inner">
@@ -54,19 +54,66 @@
 					</div>
 				</div>
 			</div>
-				
+			<div class="record-info-wrapper">
+				<div class="record-info">
+					<h3 class="record-title">데이터 출력 중</h3>
+					<div class="record-info-divider"></div>
+					<div class="record-date"><p class="date">...</div>
+				</div>
+			</div>
+			
 			<div class="record-text">
-				<p class="record-texts">Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.</p>
-				<p class="record-texts">Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. </p>
+				<p class="record-texts">데이터 출력 중입니다.</p>
 			</div>
 			<div class="bottom_actions">
 				<div class="button_lists">
-					<button class="btn btn-info lgn_button" type="submit">Facebook으로 로그인</button>
+					<button class=" lgn_button" type="submit">수정하기 (Facebook Login)</button>
 				</div>
 			</div>
 		</div>
 	</body>
 	<script>
+	
+	setContent(window.location.search.split("?")[1]);
+	
+	function setContent(userParam) {
+		var keyname = userParam.split("=")[0];
+		var value = userParam.split("=")[1];
+		console.log(keyname, value);
+		if (keyname == "id" && value) {
+			$.ajax({
+				url: "http://192.168.43.180:8000/api/records/" + value,
+				type: "GET",
+				success: function(d) {
+					var datetime = d.datetime;
+					var duration = d.duration ;
+					var title = d.title;
+					var text_json = d.text_json;
+					
+					$(".record-date p").html(datetime);
+					$("h3.record-title").html(title);
+					$(".record-texts").remove();
+					
+					
+					for (log in text_json) {						
+						var text = text_json[log].text;
+						if (text) {
+							$(".record-text").append('<p class="record-texts">' + text +'</p>')
+						} else {
+							
+						}
+					}
+
+				}
+			});
+		} else {
+			history.go(-1);
+			
+		}
+		
+	}
+	
+	
 	(function(d, s, id) {
 		var js, fjs = d.getElementsByTagName(s)[0];
 		if (d.getElementById(id)) return;
@@ -82,18 +129,22 @@
 	$(function() {
 		var playmode = false;
 		
+		
+		
 		$(".lgn_button").unbind('click').click(function() {
 			FB.login(function(response) {				
 				if (response.status == "connected") {
-					var userId = response.userID; 
-					var accessToken = response.accessToken;
-					console.log(userId);
+ 
+					var userid = response.authResponse.userID;
+					console.log(response)
 					$.ajax({
 						url: "http://192.168.43.180:8000/api/users",
-						type: "post",
-						data: formData,
+						type: "POST",
+
+						data: "username=" + userid,
 						success: function(d) {
-							alert(d);
+							location.href="update.html?user_token=" + d.token + "&id=" + d.id;
+							console.log(d) ;
 						}
 					});
 					console.log(response);
@@ -118,8 +169,6 @@
 					} else {
 						$(".seeker_currenttime").show();
 					}
-					
-
 					
 					$(".seeker_currenttime").html(fmtMSS(current));
 					$(".seeker_endtime").html(fmtMSS(max));
@@ -154,8 +203,6 @@
 			
 			$(".seeker_currenttime").html(fmtMSS(current));
 			$(".seeker_endtime").html(fmtMSS(max));
-			
-
 			
 		});
 	
@@ -196,8 +243,9 @@
 		
 		MusicObject.addEventListener('timeupdate', function(time) {
 			$(".rangeslider").attr("value",parseInt(MusicObject.currentTime));  
-			
 		});
+		
+		
 	})
       
       
