@@ -29,38 +29,98 @@
 		
 		<div class="container">
 			<div class="record-title">
-				<h3 class="page-title">녹음파일 제목</h3>
+				<div class="cover_image">
+				</div>
+				<div class="cover_image_inner">
+				</div>
+				<div class="file_detail">
+					<h3 class="page-title">녹음파일 제목</h3>
+					<p class="date">2016. 01. 06 오후 3시</p>
+				</div>
 			</div>
 			<div class="music-player">
-				<audio class="audiocontroller" controls="">
-					<source src="horse.ogg" type="audio/ogg">
-						<source src="horse.mp3" type="audio/mpeg">
-							브라우저 미지원
-						</audio>
-					</div>
-					<div class="record-text">
-						<p class="record-texts">Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.</p>
-						<p class="record-texts">Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. </p>
-					</div>
-					<div class="bottom_actions">
-						<div class="button_lists">
-							<button class="btn btn-info lgn_button" type="submit">Facebook으로 로그인</button>
-						</div>
-					</div>
+				<div class="speaker"></div>
+				
+				<audio id="player">
+					<!-- <source src="http://sifidesign.com/audio/explosion.mp3" type="audio/mp3" />
+					<source src="http://sifidesign.com/audio/explosion.ogg" type="audio/ogg" /> -->
+				</audio>
+			</div>
+			<div class="record-text">
+				<p class="record-texts">Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.</p>
+				<p class="record-texts">Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. </p>
+			</div>
+			<div class="bottom_actions">
+				<div class="button_lists">
+					<button class="btn btn-info lgn_button" type="submit">Facebook으로 로그인</button>
 				</div>
-			</body>
-			<script src="dist/js/jquery.min.js"></script>
-			<script>
-			$(".lgn_button").click(function() {
-				FB.login(function(response) {				
-					if (response.status == "connected") {
-						var userId = response.userID; 
-						var accessToken = response.accessToken;
+			</div>
+		</div>
+	</body>
+	<script src="dist/js/jquery.min.js"></script>
+	<script>
+	$(".lgn_button").click(function() {
+		FB.login(function(response) {				
+			if (response.status == "connected") {
+				var userId = response.userID; 
+				var accessToken = response.accessToken;
 						
-						location.href="update.html";
-						console.log(response);
-					}
-				}, {scope: 'public_profile,email'});
-			})
-			</script>
-			</html>
+				location.href="update.html";
+				console.log(response);
+			}
+		}, {scope: 'public_profile,email'});
+	})
+	var getaudio = $('#player')[0];
+	/* Get the audio from the player (using the player's ID), the [0] is necessary */
+	var mouseovertimer;
+	/* Global variable for a timer. When the mouse is hovered over the speaker it will start playing after hovering for 1 second, if less than 1 second it won't play (incase you accidentally hover over the speaker) */
+	var audiostatus = 'off';
+	/* Global variable for the audio's status (off or on). It's a bit crude but it works for determining the status. */
+
+	$(document).on('mouseclick', '.speaker', function() {
+		/* Bonus feature, if the mouse hovers over the speaker image for more than 1 second the audio will start playing */
+		if (!mouseovertimer) {
+			mouseovertimer = window.setTimeout(function() {
+				mouseovertimer = null;
+				if (!$('.speaker').hasClass("speakerplay")) {
+					getaudio.load();
+					/* Loads the audio */
+					getaudio.play();
+					/* Play the audio (starting at the beginning of the track) */
+					$('.speaker').addClass('speakerplay');
+					return false;
+				}
+			}, 1000);
+		}
+	});
+
+	
+	$(document).on('click', '.speaker', function() {
+		if (!$('.speaker').hasClass("speakerplay")) {
+			if (audiostatus == 'off') {
+				$('.speaker').addClass('speakerplay');
+				getaudio.load();
+				getaudio.play();
+				window.clearTimeout(mouseovertimer);
+				audiostatus = 'on';
+				return false;
+			} else if (audiostatus == 'on') {
+				$('.speaker').addClass('speakerplay');
+				getaudio.play()
+			}
+		} else if ($('.speaker').hasClass("speakerplay")) {
+			getaudio.pause();
+			$('.speaker').removeClass('speakerplay');
+			window.clearTimeout(mouseovertimer);
+			audiostatus = 'on';
+		}
+	});
+
+	$('#player').on('ended', function() {
+		$('.speaker').removeClass('speakerplay');
+		/*When the audio has finished playing, remove the class speakerplay*/
+		audiostatus = 'off';
+		/*Set the status back to off*/
+	});
+	</script>
+	</html>
