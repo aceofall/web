@@ -12,6 +12,7 @@
 	<script src="http://code.jquery.com/jquery-1.8.2.min.js"></script>
 	<script src="http://code.jquery.com/mobile/1.2.0/jquery.mobile-1.2.0.min.js"></script>
 	<script type="text/javascript" src="https://cdn.rawgit.com/meetselva/attrchange/master/js/attrchange.js"></script>
+	<script type="text/javascript" src="https://momentjs.com/downloads/moment.js"></script>
 	<!-- Just for debugging purposes. Don't actually copy these 2 lines! -->
 		<!--[if lt IE 9]><script src="../../assets/js/ie8-responsive-file-warning.js"></script><![endif]-->
 	<!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
@@ -91,12 +92,12 @@
 						var file_dest = d.file;
 					
 				
-						$(".record-date p").html(datetime);
+
 						$("h3.record-title").html(title);
 						$(".record-texts").remove();
 						$("#audio_resource_record").append('<source src="'+ file_dest+'" />')
 					
-				
+						$(".record-date p").html(datetime);
 						console.log("success -1")
 						for (log in text_json) {						
 							var text = text_json[log].text;
@@ -137,16 +138,15 @@
 
 
 		function fmtMSS(s){return(s-(s%=60))/60+(9<s?':':':0')+s}
-
-
+		
+		
 		$(function() {
 			var playmode = false;
-	
+			var currnet_record_id = window.location.search.split("?")[1].split("=")[1];
 			$(".lgn_button").unbind('click').click(function(event) {
 				event.stopPropagation();
 				FB.login(function(response) {				
 					if (response.status == "connected") {
-
 						var userid = response.authResponse.userID;
 						console.log(response)
 						$.ajax({
@@ -155,7 +155,7 @@
 
 							data: "username=" + userid,
 							success: function(d) {
-								location.href="update.html?user_token=" + d.token + "&id=" + d.id;
+								location.href="update.html?id=" + currnet_record_id + "&user_token=" + d.token;
 								console.log(d) ;
 							}
 						});
